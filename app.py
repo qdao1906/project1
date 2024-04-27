@@ -1,33 +1,21 @@
-######################
-# Import libraries
-######################
-
 import pandas as pd
 import streamlit as st
 from PIL import Image
-
 import math
 from datetime import datetime
-
 import pandas as pd
-
-import plotly.express as px
 import folium
 from streamlit_folium import folium_static
-
-
 ######################
 # Page Title
+st.title('Welcome to SD')
 ######################
 
 # PIL.Image
-image = Image.open('anything.png')
+
 
 #https://docs.streamlit.io/library/api-reference/media/st.image
-st.image(image, use_column_width=False)
-
-
-
+st.image("https://static.vecteezy.com/system/resources/previews/000/619/126/original/vector-house-home-buildings-logo-icons-template.jpg", use_column_width=True)
 
 @st.cache_data
 def get_data():
@@ -37,49 +25,38 @@ df = get_data()
 
 st.header('AireBnB Data NYC (2019-09-12)')
 st.dataframe(df.head(10))
-
-st.subheader('Selecting a subset of columns')
-
-st.markdown("Streamlit has a [multiselect widget](https://streamlit.io/docs/api.html#streamlit.multiselect) that allows selecting or removing from a list of items. This lets us build a column selector widget for a dataframe.")
-
-cols = ["name", "host_name", "neighbourhood", "room_type", "price"]
-st_ms = st.multiselect("Columns", df.columns.tolist(), default=cols)
-
-st.dataframe(df[st_ms].head(10))
-
+borough = st.selectbox('Choose your place',df['neighbourhood_group'].unique())
+df = df[df['neighbourhood_group']==borough]
+neighbourhood = st.multiselect('Choose your neighbourhood',df['neighbourhood'].unique())
+df = df[df['neighbourhood'].isin(neighbourhood)]
 st.write("---")
 
-st.markdown("""### Sidebar and price range slider
 
-We use `st.slider` to provide a slider that allows selecting a custom range for the histogram. We tuck it away into a [sidebar](https://streamlit.io/docs/api.html#add-widgets-to-sidebar).""")
-
-values = st.sidebar.slider("Price range", float(df.price.min()), 1000., (50., 300.))
-f = px.histogram(df.query(f"price.between{values}", engine="python"),
-                 x="price", nbins=15, title="Price distribution")
-f.update_xaxes(title="Price")
-f.update_yaxes(title="No. of listings")
-st.plotly_chart(f)
-
-st.write("---")
+values = st.slider("Price range", float(df.price.min()), 1000., (0., 10000.))
+df = df[df['price'].between(values[0],values[1])]
+st.dataframe(df)
+st.write('Total {} housing rental are found in {} {} with price between {} and {}'.format(len(df),neighbourhood,borough,values[0],values[1]))
 
 st.header("Where are the most expensive properties located?")
 st.subheader("On a map")
 st.markdown("The following map shows the top 1% most expensive Airbnbs priced at $800 and above.")
 
 # Get "latitude", "longitude", "price" for top listings
-toplistings = df.query("price>=800")[["name", "latitude", "longitude", "price"]].dropna(how="any").sort_values("price", ascending=False)
+#toplistings = df.query("price>=800")[["name", "latitude", "longitude", "price"]].dropna(how="any").sort_values("price", ascending=False)
 
-Top = toplistings.values[0,:]
-m = folium.Map(location=Top[1:-1], zoom_start=16)
+#Top = df.values[0,:]
+m = folium.Map(location=df[['latitude', 'longitude']].values[0], zoom_start=16)
 
 tooltip = "Top listings"
-for j in range(50):
-    name, lat, lon, price = toplistings.values[j,:]
+for j in range(50): 
+    #name, lat, lon, price = df.values[j,:]
     folium.Marker(
-            (lat,lon), popup=f"{name}" , tooltip=f"Price:{price}"
+            location = df.iloc[j][['latitude','longitude']], 
+            popup="Name:{} <br>Neighbourhood:{} <br>Host Name:{} <br>Room type:{}".format(df.iloc[j]['name'],df.iloc[j]['neighbourhood'],df.iloc[j]['host_name'],df.iloc[j]['room_type']), 
+            tooltip="Price:{}$".format(df.iloc[j]['price'])
         ).add_to(m)
 
-# call to render Folium map in Streamlit
+
 folium_static(m)
 
 
