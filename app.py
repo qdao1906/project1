@@ -58,27 +58,3 @@ for j in range(50):
 
 
 folium_static(m)
-
-
-st.write("---")
-
-st.markdown("""### Images and dropdowns
-
-Use [st.image](https://streamlit.io/docs/api.html#streamlit.image) to show images of cats, puppies, feature importance plots, tagged video frames, and so on.
-
-Now for a bit of fun.""")
-
-pics = {
-    "Cat": "https://cdn.pixabay.com/photo/2016/09/24/22/20/cat-1692702_960_720.jpg",
-    "Puppy": "https://cdn.pixabay.com/photo/2019/03/15/19/19/puppy-4057786_960_720.jpg",
-    "Sci-fi city": "https://storage.needpix.com/rsynced_images/science-fiction-2971848_1280.jpg",
-    "Cheetah": "img/running-cheetah.jpeg",
-    "FT-Logo": "ft-logo.png"
-}
-pic = st.selectbox("Picture choices", list(pics.keys()), 0)
-st.image(pics[pic], use_column_width=True, caption=pics[pic])
-
-st.write("---")
-
-select_col = st.selectbox("Select Columns", list(df.columns), 0)
-st.write(f"Your selection is {select_col}")
